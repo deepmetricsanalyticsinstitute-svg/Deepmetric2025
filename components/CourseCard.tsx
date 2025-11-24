@@ -207,6 +207,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                                         placeholder="Add evidence (links, notes) here..."
                                         value={evidence}
                                         onChange={(e) => setEvidence(e.target.value)}
+                                        onClick={(e) => e.stopPropagation()}
                                    />
                                </div>
                                <Button variant="secondary" size="sm" className="w-full" onClick={() => onRequestCompletion(course.id, evidence)}>
