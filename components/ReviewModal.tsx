@@ -18,8 +18,18 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, onSub
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full transform transition-all scale-100">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Rate "{courseTitle}"</h3>
+      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full transform transition-all scale-100 relative">
+        <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none p-1 rounded-full hover:bg-gray-100"
+            aria-label="Close"
+        >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <h3 className="text-xl font-bold text-gray-900 mb-4 pr-8">Rate "{courseTitle}"</h3>
         
         <div className="flex flex-col items-center mb-6">
             <div className="flex gap-1 mb-2">

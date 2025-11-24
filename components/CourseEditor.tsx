@@ -27,6 +27,7 @@ export const CourseEditor: React.FC<CourseEditorProps> = ({ course, onSave, onCa
   const editorRef = useRef<HTMLDivElement>(null);
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [isGeneratingTags, setIsGeneratingTags] = useState(false);
+  const [newRequirement, setNewRequirement] = useState('');
 
   useEffect(() => {
     setFormData(course);
@@ -44,8 +45,6 @@ export const CourseEditor: React.FC<CourseEditorProps> = ({ course, onSave, onCa
   };
 
   const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Note: A simple split/join on comma prevents typing a comma naturally. 
-    // Ideally this would use a local state, but keeping consistent with existing logic for now.
     const tags = e.target.value.split(',').map(tag => tag.trim()).filter(Boolean);
     setFormData(prev => ({ ...prev, tags }));
   };
@@ -66,11 +65,9 @@ export const CourseEditor: React.FC<CourseEditorProps> = ({ course, onSave, onCa
       
       setIsGeneratingTags(true);
       try {
-          // Strip HTML tags from description for the prompt
           const cleanDesc = formData.description.replace(/<[^>]*>?/gm, '');
           const tags = await generateTagsForCourse(formData.title, cleanDesc);
           
-          // Filter out tags that are already present (case-insensitive)
           const currentTagsLower = new Set(formData.tags.map(t => t.toLowerCase().trim()));
           const newSuggestions = tags.filter(t => !currentTagsLower.has(t.toLowerCase().trim()));
           
@@ -86,6 +83,22 @@ export const CourseEditor: React.FC<CourseEditorProps> = ({ course, onSave, onCa
       const newTags = [...formData.tags, tag];
       setFormData(prev => ({ ...prev, tags: newTags }));
       setSuggestedTags(prev => prev.filter(t => t !== tag));
+  };
+
+  const handleAddRequirement = () => {
+      if (!newRequirement.trim()) return;
+      setFormData(prev => ({
+          ...prev,
+          requirements: [...(prev.requirements || []), newRequirement.trim()]
+      }));
+      setNewRequirement('');
+  };
+
+  const handleRemoveRequirement = (index: number) => {
+      setFormData(prev => ({
+          ...prev,
+          requirements: (prev.requirements || []).filter((_, i) => i !== index)
+      }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -264,6 +277,44 @@ export const CourseEditor: React.FC<CourseEditorProps> = ({ course, onSave, onCa
                       </div>
                   </div>
               )}
+            </div>
+
+            {/* Completion Requirements Section */}
+            <div className="col-span-2 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Completion Requirements</label>
+                <p className="text-xs text-gray-500 mb-3">
+                    Define specific criteria students must meet to request course completion (e.g., "Score > 80% on final quiz", "Watch all 10 video modules").
+                </p>
+                
+                <div className="space-y-2 mb-3">
+                    {formData.requirements && formData.requirements.map((req, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-white p-2 rounded border border-gray-200 shadow-sm animate-fade-in">
+                            <span className="text-sm text-gray-700 flex-1">{req}</span>
+                            <button
+                                type="button"
+                                onClick={() => handleRemoveRequirement(index)}
+                                className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                    ))}
+                    {(!formData.requirements || formData.requirements.length === 0) && (
+                        <div className="text-sm text-gray-400 italic">No specific requirements added.</div>
+                    )}
+                </div>
+
+                <div className="flex gap-2">
+                    <input 
+                        type="text"
+                        value={newRequirement}
+                        onChange={(e) => setNewRequirement(e.target.value)}
+                        placeholder="Add a new requirement..."
+                        className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleAddRequirement(); }}}
+                    />
+                    <Button type="button" variant="secondary" size="sm" onClick={handleAddRequirement}>Add</Button>
+                </div>
             </div>
             
              <div className="col-span-2">

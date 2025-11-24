@@ -21,7 +21,7 @@ export const AIChat: React.FC<AIChatProps> = ({ courses }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,8 +40,16 @@ export const AIChat: React.FC<AIChatProps> = ({ courses }) => {
       setMessages(prev => [...prev, { role: 'model', text: '' }]);
       
       let fullText = '';
+      let firstChunkReceived = false;
+
       for await (const chunk of stream) {
         const chunkText = chunk.text || '';
+        
+        if (chunkText && !firstChunkReceived) {
+            setIsTyping(false);
+            firstChunkReceived = true;
+        }
+
         fullText += chunkText;
         
         setMessages(prev => {
@@ -78,23 +86,23 @@ export const AIChat: React.FC<AIChatProps> = ({ courses }) => {
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
-                  msg.role === 'user' 
-                    ? 'bg-indigo-600 text-white rounded-br-none' 
-                    : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm'
-                }`}>
-                  {msg.text}
-                </div>
+                {msg.text && (
+                  <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
+                    msg.role === 'user' 
+                      ? 'bg-indigo-600 text-white rounded-br-none' 
+                      : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm'
+                  }`}>
+                    {msg.text}
+                  </div>
+                )}
               </div>
             ))}
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
-                  </div>
+                <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex items-center space-x-1 w-16 h-10 justify-center">
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></div>
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></div>
                 </div>
               </div>
             )}

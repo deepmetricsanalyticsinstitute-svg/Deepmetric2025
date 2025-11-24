@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Course, CourseLevel } from '../types';
 import { Button } from './Button';
 
@@ -11,7 +11,7 @@ interface CourseCardProps {
   isPending?: boolean;
   progress?: number;
   onProgressChange?: (progress: number) => void;
-  onRequestCompletion?: (courseId: string) => void;
+  onRequestCompletion?: (courseId: string, evidence?: string) => void;
   onViewCertificate?: (courseId: string) => void;
   onEdit?: (course: Course) => void;
   onDelete?: (courseId: string) => void;
@@ -40,6 +40,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   onRate,
   hasRated
 }) => {
+  const [evidence, setEvidence] = useState('');
+  const hasRequirements = course.requirements && course.requirements.length > 0;
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col h-full relative group">
       <div className="relative h-48">
@@ -189,9 +192,32 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                             Pending Admin Approval
                         </Button>
                     ) : !isCompleted && onRequestCompletion ? (
-                        <Button variant="secondary" size="sm" className="w-full" onClick={() => onRequestCompletion(course.id)}>
-                            Request Completion
-                        </Button>
+                        hasRequirements ? (
+                           <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 space-y-3">
+                               <div>
+                                    <p className="text-xs font-bold text-gray-700 mb-1">Requirements for Completion:</p>
+                                    <ul className="list-disc list-inside text-xs text-gray-600 space-y-0.5">
+                                        {course.requirements?.map((req, i) => <li key={i}>{req}</li>)}
+                                    </ul>
+                               </div>
+                               <div>
+                                   <textarea 
+                                        className="w-full text-xs p-2 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none" 
+                                        rows={2} 
+                                        placeholder="Add evidence (links, notes) here..."
+                                        value={evidence}
+                                        onChange={(e) => setEvidence(e.target.value)}
+                                   />
+                               </div>
+                               <Button variant="secondary" size="sm" className="w-full" onClick={() => onRequestCompletion(course.id, evidence)}>
+                                    Submit Evidence & Request
+                                </Button>
+                           </div>
+                        ) : (
+                            <Button variant="secondary" size="sm" className="w-full" onClick={() => onRequestCompletion(course.id)}>
+                                Request Completion
+                            </Button>
+                        )
                     ) : null}
                 </div>
             ) : (

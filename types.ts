@@ -26,6 +26,7 @@ export interface Course {
   price: number; // In GHC
   tags: string[];
   image: string;
+  requirements?: string[]; // New: List of requirements for completion
 }
 
 export interface User {
@@ -36,6 +37,7 @@ export interface User {
   completedCourseIds: string[];
   pendingCourseIds: string[];
   courseProgress: { [courseId: string]: number }; // Mapping of courseId to percentage (0-100)
+  completionEvidence?: { [courseId: string]: string }; // New: Mapping of courseId to evidence text
   role: 'student' | 'admin';
 }
 

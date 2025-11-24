@@ -40,6 +40,7 @@ const App: React.FC = () => {
             completedCourseIds: u.completedCourseIds || [],
             pendingCourseIds: u.pendingCourseIds || [],
             courseProgress: u.courseProgress || {},
+            completionEvidence: u.completionEvidence || {},
             role: u.role || 'student'
         }));
         setAllUsers(parsedUsers);
@@ -53,6 +54,7 @@ const App: React.FC = () => {
       if (!parsedUser.completedCourseIds) parsedUser.completedCourseIds = [];
       if (!parsedUser.pendingCourseIds) parsedUser.pendingCourseIds = [];
       if (!parsedUser.courseProgress) parsedUser.courseProgress = {};
+      if (!parsedUser.completionEvidence) parsedUser.completionEvidence = {};
       if (!parsedUser.role) parsedUser.role = 'student';
       
       setUser(parsedUser);
@@ -101,6 +103,7 @@ const App: React.FC = () => {
             completedCourseIds: [],
             pendingCourseIds: [],
             courseProgress: {},
+            completionEvidence: {},
             role: isAdmin ? 'admin' : 'student'
         };
         const newAllUsers = [...allUsers, targetUser];
@@ -116,6 +119,10 @@ const App: React.FC = () => {
         // Migration check for existing users logging in
         if (!targetUser.courseProgress) {
             targetUser.courseProgress = {};
+            updated = true;
+        }
+        if (!targetUser.completionEvidence) {
+            targetUser.completionEvidence = {};
             updated = true;
         }
 
@@ -193,7 +200,7 @@ const App: React.FC = () => {
     saveAllUsers(updatedAllUsers);
   };
 
-  const handleRequestCompletion = (courseId: string) => {
+  const handleRequestCompletion = (courseId: string, evidence?: string) => {
     if (!user) return;
     
     // Add to pending, not completed
@@ -201,7 +208,11 @@ const App: React.FC = () => {
 
     const updatedUser: User = {
         ...user,
-        pendingCourseIds: [...(user.pendingCourseIds || []), courseId]
+        pendingCourseIds: [...(user.pendingCourseIds || []), courseId],
+        completionEvidence: evidence ? {
+            ...(user.completionEvidence || {}),
+            [courseId]: evidence
+        } : user.completionEvidence
     };
     
     setUser(updatedUser);
@@ -527,8 +538,8 @@ const App: React.FC = () => {
                     {pendingRequests.length > 0 ? (
                         <ul className="divide-y divide-gray-200">
                             {pendingRequests.map((req, idx) => (
-                                <li key={`${req.user.id}-${req.courseId}-${idx}`} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                                    <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-8">
+                                <li key={`${req.user.id}-${req.courseId}-${idx}`} className="px-6 py-4 flex flex-col sm:flex-row sm:items-start justify-between hover:bg-gray-50 transition-colors gap-4">
+                                    <div className="flex flex-col gap-2 flex-1">
                                         <div>
                                             <p className="text-sm font-medium text-indigo-600 mb-1">{req.course?.title}</p>
                                             <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -537,8 +548,14 @@ const App: React.FC = () => {
                                                 <span className="text-gray-400">({req.user.email})</span>
                                             </div>
                                         </div>
+                                        {req.user.completionEvidence && req.user.completionEvidence[req.courseId] && (
+                                            <div className="mt-2 bg-yellow-50 p-3 rounded-md border border-yellow-200 text-sm">
+                                                <span className="font-bold text-yellow-800 block mb-1">User Evidence:</span>
+                                                <p className="text-gray-700 whitespace-pre-wrap">{req.user.completionEvidence[req.courseId]}</p>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 shrink-0">
                                         <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 border-red-200" onClick={() => handleRejectCompletion(req.user.id, req.courseId)}>
                                             Reject
                                         </Button>
@@ -665,6 +682,7 @@ const App: React.FC = () => {
                     price: 0,
                     tags: [],
                     image: 'https://picsum.photos/seed/new/800/600',
+                    requirements: [],
                 }}
                 onSave={handleSaveNewCourse}
                 onCancel={() => setCurrentView(View.COURSES)}
@@ -746,5 +764,3 @@ const App: React.FC = () => {
     </div>
   );
 };
-
-export default App;
